@@ -43,13 +43,14 @@ function updateDiagnostics(document: vscode.TextDocument, collection: vscode.Dia
 
 	if (document && (path.endsWith(".lua") || path.endsWith(".luau"))) {
 		let errors = executeIn(document.getText(), cwd);
+		console.log(errors);
 		let split = errors.split("\n");
 
 		collection.delete(document.uri);
 		let diagnostics: vscode.Diagnostic[] = [];
 
 		split.forEach((line) => {
-			let match = line.match(/^(.*):(\d*):(\d*-\d*): \(.*\) (.*?): (.*)/);
+			let match = line.match(/^(.*):(\d*):(\d*-\d*): \(.*\) (\w*): (.*)/);
 			if (!match || match[1] !== "stdin") {
 				return;
 			}
