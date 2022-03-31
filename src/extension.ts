@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import FileAnalyzer from "./FileAnalyzer";
+import { getRojoProjectPath, getTypeDefsPath, pickFilePath } from "./Utils";
 
 function getWorkspacePath(): string | null {
     let folders = vscode.workspace.workspaceFolders;
@@ -9,17 +10,21 @@ function getWorkspacePath(): string | null {
     return folders[0].uri.fsPath;
 }
 
+export let ExtensionContext: vscode.ExtensionContext;
+export let RojoProjectPath: string | undefined;
+export let TypeDefsPath: string | undefined;
+export let AnalyzerCommand: string;
+export let ConfigurationName = "vscode-luau-analyzer";
+
 class Extension {
-    context: vscode.ExtensionContext;
     collection: vscode.DiagnosticCollection;
     fileAnalyzers: Map<string, FileAnalyzer>;
     
-    constructor(context: vscode.ExtensionContext) {
-        this.context = context;
+    constructor() {
         this.fileAnalyzers = new Map<string, FileAnalyzer>();
         
         this.collection = vscode.languages.createDiagnosticCollection("luau");
-        this.context.subscriptions.push(this.collection);
+        ExtensionContext.subscriptions.push(this.collection);
     }
     
     deleteFileAnalyzer(document: vscode.TextDocument) {
@@ -39,9 +44,70 @@ class Extension {
         }
     }
     
-    activate() {
+    updateAllFiles() {
+        this.fileAnalyzers.forEach((analyzer) => {
+            analyzer.runDiagnostics();
+        })
+    }
+    
+    registerCommands() {
+        ExtensionContext.subscriptions.push(
+            vscode.commands.registerCommand(ConfigurationName + ".setRojoProject", async () => {
+                let path = await pickFilePath("rojo project", ".project.rojo");
+                if (!path) { return; }
+                ExtensionContext.workspaceState.update("rojoLastPath", path);
+                RojoProjectPath = path;
+                this.updateAllFiles();
+            }),
+            vscode.commands.registerCommand(ConfigurationName + ".setTypeDefsPath", async () => {
+                let path = await pickFilePath("type definitions", ".d.lua");
+                if (!path) { return; }
+                ExtensionContext.workspaceState.update("typeDefsLastPath", path);
+                TypeDefsPath = path;
+                this.updateAllFiles();
+            })
+        );
+    }
+    
+    updateConfigs() {
+        let config = vscode.workspace.getConfiguration(ConfigurationName);
         
-        this.context.subscriptions.push(
+        if (config.get("usesLuauAnalyzeRojo") == true) {
+            getRojoProjectPath().then((path) => {
+                if (path !== RojoProjectPath) {
+                    RojoProjectPath = path;
+                    this.updateAllFiles();
+                }
+            });
+            getTypeDefsPath().then((path) => {
+                if (path !== TypeDefsPath) {
+                    TypeDefsPath = path;
+                    this.updateAllFiles();
+                }
+            });
+        }
+        
+        let command = config.get("analyzerCommand");
+        if (command) {
+            AnalyzerCommand = command as string;
+        } else {
+            vscode.window.showErrorMessage("Luau Analyzer command not found! Setting command to: `luau-analyzer`");
+            AnalyzerCommand = "luau-analyzer";
+            config.update("analyzerCommand", AnalyzerCommand, true);
+        }
+    }
+    
+    activate() {
+        this.updateConfigs()
+        ExtensionContext.subscriptions.push(vscode.workspace.onDidChangeConfiguration(this.updateConfigs));
+        
+        if (vscode.window.activeTextEditor) {
+            this.updateDiagnostics(vscode.window.activeTextEditor.document);
+        }
+        
+        this.registerCommands();
+        
+        ExtensionContext.subscriptions.push(
             vscode.workspace.onDidOpenTextDocument((document) => {
                 this.updateDiagnostics(document);
             }),
@@ -64,7 +130,9 @@ class Extension {
 let extension: Extension;
 
 export function activate(context: vscode.ExtensionContext) {
-    extension = new Extension(context)
+    ExtensionContext = context;
+    
+    extension = new Extension()
     extension.activate();
 }
 

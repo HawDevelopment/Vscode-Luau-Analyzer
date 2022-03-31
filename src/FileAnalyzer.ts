@@ -1,4 +1,6 @@
 import * as vscode from "vscode";
+import * as fs from 'fs'
+import { ConfigurationName, AnalyzerCommand, RojoProjectPath, TypeDefsPath } from "./extension";
 import { spawnSync } from "child_process";
 
 export default class FileAnalyzer {
@@ -13,11 +15,28 @@ export default class FileAnalyzer {
     }
     
     executeAnalyzer(): string[] {
-        let stdin = this.document.getText();
-        let result = spawnSync("luau-analyze", ["--formatter=plain", "-"], {input: stdin, cwd: this.cwd as any});
-    
-        console.log(result)
+        let config = vscode.workspace.getConfiguration(ConfigurationName);
         
+        let stdin = this.document.getText();
+        let args = ["--formatter=plain", "-"]
+        
+        let usesLuauAnalyzeRojo = config.get("usesLuauAnalyzeRojo");
+        
+        if (usesLuauAnalyzeRojo) {
+            args.push("--stdin-filepath=" + this.document.uri.fsPath);
+            if (RojoProjectPath) {
+                args.push("--project=" + RojoProjectPath);
+            }
+            if (TypeDefsPath) {
+                args.push("--defs=" + TypeDefsPath);
+            }
+        }
+        
+        let result = spawnSync(AnalyzerCommand, args, {input: stdin, cwd: this.cwd as any});
+        if (!result.stdout) {
+            vscode.window.showErrorMessage(`Failed to run analyzer! Command not found: ${AnalyzerCommand}! Consider changing it in the settings.`);
+            return []
+        }
         return result.stdout.toString().split("\n");
     }
     
