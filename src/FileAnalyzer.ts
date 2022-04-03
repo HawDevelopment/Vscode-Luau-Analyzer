@@ -18,12 +18,12 @@ export default class FileAnalyzer {
         let config = vscode.workspace.getConfiguration(ConfigurationName);
         
         let stdin = this.document.getText();
-        let args = ["--formatter=plain", "-"]
+        let args = []
         
         let usesLuauAnalyzeRojo = config.get("usesLuauAnalyzeRojo");
         
         if (usesLuauAnalyzeRojo) {
-            args.push("--stdin-filepath=" + this.document.uri.fsPath);
+            args.push("--stdin-filepath=" + vscode.workspace.asRelativePath(this.document.uri.fsPath));
             if (RojoProjectPath) {
                 args.push("--project=" + RojoProjectPath);
             }
@@ -31,6 +31,8 @@ export default class FileAnalyzer {
                 args.push("--defs=" + TypeDefsPath);
             }
         }
+        
+        args.push("--formatter=plain", "-")
         
         let result = spawnSync(AnalyzerCommand, args, {input: stdin, cwd: this.cwd as any});
         if (!result.stdout) {

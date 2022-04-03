@@ -53,7 +53,7 @@ class Extension {
     registerCommands() {
         ExtensionContext.subscriptions.push(
             vscode.commands.registerCommand(ConfigurationName + ".setRojoProject", async () => {
-                let path = await pickFilePath("rojo project", ".project.rojo");
+                let path = await pickFilePath("rojo project", ".project.json");
                 if (!path) { return; }
                 ExtensionContext.workspaceState.update("rojoLastPath", path);
                 RojoProjectPath = path;
@@ -134,6 +134,7 @@ export function activate(context: vscode.ExtensionContext) {
     
     extension = new Extension()
     extension.activate();
+    console.log("Luau Analyzer extension activated.");
 }
 
 export function deactivate() {
