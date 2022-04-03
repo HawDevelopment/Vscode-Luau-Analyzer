@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
-import * as fs from 'fs'
-import { ConfigurationName, AnalyzerCommand, RojoProjectPath, TypeDefsPath } from "./extension";
+import { ConfigurationName, AnalyzerCommand, RojoProjectPath, TypeDefsPath, UsesLuauAnalyzeRojo } from "./extension";
 import { spawnSync } from "child_process";
 
 export default class FileAnalyzer {
@@ -14,25 +13,17 @@ export default class FileAnalyzer {
         this.cwd = cwd;
     }
     
-    executeAnalyzer(): string[] {
-        let config = vscode.workspace.getConfiguration(ConfigurationName);
-        
+    executeAnalyzer(): string[] {        
         let stdin = this.document.getText();
-        let args = []
+        let args = ["--formatter=plain", "-"];
         
-        let usesLuauAnalyzeRojo = config.get("usesLuauAnalyzeRojo");
-        
-        if (usesLuauAnalyzeRojo) {
-            args.push("--stdin-filepath=" + vscode.workspace.asRelativePath(this.document.uri.fsPath));
-            if (RojoProjectPath) {
-                args.push("--project=" + RojoProjectPath);
-            }
-            if (TypeDefsPath) {
-                args.push("--defs=" + TypeDefsPath);
-            }
+        if (UsesLuauAnalyzeRojo == true) {
+            args.push(
+                "--stdin-filepath=" + vscode.workspace.asRelativePath(this.document.uri.fsPath),
+                "--project=" + RojoProjectPath,
+                "--defs=" + TypeDefsPath
+            );
         }
-        
-        args.push("--formatter=plain", "-")
         
         let result = spawnSync(AnalyzerCommand, args, {input: stdin, cwd: this.cwd as any});
         if (!result.stdout) {
