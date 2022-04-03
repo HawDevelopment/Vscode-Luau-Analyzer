@@ -91,8 +91,8 @@ class Extension {
         if (command) {
             AnalyzerCommand = command as string;
         } else {
-            vscode.window.showErrorMessage("Luau Analyzer command not found! Setting command to: `luau-analyzer`");
-            AnalyzerCommand = "luau-analyzer";
+            vscode.window.showErrorMessage("Luau Analyzer command not found! Setting command to: `luau-analyze`");
+            AnalyzerCommand = "luau-analyze";
             config.update("analyzerCommand", AnalyzerCommand, true);
         }
     }
