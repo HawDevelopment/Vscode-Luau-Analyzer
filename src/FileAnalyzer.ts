@@ -13,9 +13,14 @@ export default class FileAnalyzer {
         this.cwd = cwd;
     }
     
-    executeAnalyzer(): string[] {        
+    executeAnalyzer(args?: string[]): string {
         let stdin = this.document.getText();
-        let args = ["--formatter=plain", "-"];
+        
+        args = args || [];
+        args.push(
+            "--formatter=plain",
+            "-"
+        )
         
         if (UsesLuauAnalyzeRojo == true) {
             args.push(
@@ -28,9 +33,9 @@ export default class FileAnalyzer {
         let result = spawnSync(AnalyzerCommand, args, {input: stdin, cwd: this.cwd as any});
         if (!result.stdout) {
             vscode.window.showErrorMessage(`Failed to run analyzer! Command not found: ${AnalyzerCommand}! Consider changing it in the settings.`);
-            return []
+            return ""
         }
-        return result.stdout.toString().split("\n");
+        return result.stdout.toString();
     }
     
     createDiagnosticForLine(line: string): vscode.Diagnostic | undefined {
@@ -69,7 +74,7 @@ export default class FileAnalyzer {
         // Clear old diagnostics
         this.collection.delete(this.document.uri);
         
-        let errors = this.executeAnalyzer();
+        let errors = this.executeAnalyzer().split("\n");
         let newDiagnostics: vscode.Diagnostic[] = [];
         
         errors.forEach((line) => {

@@ -17,6 +17,9 @@ export let TypeDefsPath: string | undefined;
 export let AnalyzerCommand: string;
 export let UsesLuauAnalyzeRojo: boolean;
 
+let SourceMap: string = "";
+let AnnotatedSource: string = "";
+
 class Extension {
     collection: vscode.DiagnosticCollection;
     fileAnalyzers: Map<string, FileAnalyzer>;
@@ -51,7 +54,46 @@ class Extension {
         })
     }
     
+    rojoGetActiveFile(): FileAnalyzer | undefined {
+        let config = vscode.workspace.getConfiguration(ConfigurationName);
+        if (config.get("usesLuauAnalyzeRojo") !== true) {
+            vscode.window.showErrorMessage("Cannot show file! Uses Luau Analyze Rojo is not enabled in configurations!");
+            return undefined;
+        }
+        
+        let textEditor = vscode.window.activeTextEditor 
+        if (!textEditor) { return; }
+        let fileAnalyzer = this.fileAnalyzers.get(textEditor.document.uri.fsPath)!;
+        return fileAnalyzer;
+    }
+    
     registerCommands() {
+        ExtensionContext.subscriptions.push(
+            vscode.commands.registerCommand(ConfigurationName + ".showSourceMap", () => {
+                let fileAnalyzer = this.rojoGetActiveFile();
+                if (!fileAnalyzer) { return; }
+                SourceMap = fileAnalyzer.executeAnalyzer(["--dump-source-map"])
+                
+                vscode.workspace.openTextDocument({
+                    language: "text",
+                    content: SourceMap
+                }).then((document) => {
+                    vscode.window.showTextDocument(document);
+                })
+            }),
+            vscode.commands.registerCommand(ConfigurationName + ".showAnnotations", () => {
+                let fileAnalyzer = this.rojoGetActiveFile();
+                if (!fileAnalyzer) { return; }
+                AnnotatedSource = fileAnalyzer.executeAnalyzer(["--annotate"])
+                
+                vscode.workspace.openTextDocument({
+                    language: "lua",
+                    content: AnnotatedSource
+                }).then((document) => {
+                    vscode.window.showTextDocument(document);
+                })
+            })
+        )
     }
     
     updateConfigs() {

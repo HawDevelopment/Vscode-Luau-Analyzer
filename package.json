@@ -36,7 +36,19 @@
                     "markdownDescription": "Specifies the global type definition. (Note: `Uses Luau Analyze Rojo` must be set to true!)"
                 }
             }
-        }
+        },
+        "commands": [
+            {
+                "command": "vscode-luau-analyzer.showSourceMap",
+                "title": "Show Dumped Source Map",
+                "category": "Analyzer-Lua"
+            },
+            {
+                "command": "vscode-luau-analyzer.showAnnotations",
+                "title": "Show Annotations",
+                "category": "Analyzer-Lua"
+            }
+        ]
     },
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
