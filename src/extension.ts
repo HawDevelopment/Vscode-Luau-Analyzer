@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import FileAnalyzer from "./FileAnalyzer";
+import { installTypes } from "./Utils";
 
 function getWorkspacePath(): string | null {
     let folders = vscode.workspace.workspaceFolders;
@@ -57,7 +58,7 @@ class Extension {
     rojoGetActiveFile(): FileAnalyzer | undefined {
         let config = vscode.workspace.getConfiguration(ConfigurationName);
         if (config.get("usesLuauAnalyzeRojo") !== true) {
-            vscode.window.showErrorMessage("Cannot show file! Uses Luau Analyze Rojo is not enabled in configurations!");
+            vscode.window.showErrorMessage(`${ConfigurationName}: Cannot show file! Uses Luau Analyze Rojo is not enabled in configurations!`);
             return undefined;
         }
         
@@ -92,7 +93,10 @@ class Extension {
                 }).then((document) => {
                     vscode.window.showTextDocument(document);
                 })
-            })
+            }),
+            vscode.commands.registerCommand(ConfigurationName + ".installTypes", () => {
+                installTypes()
+            }),
         )
     }
     
@@ -107,7 +111,7 @@ class Extension {
         if (command) {
             AnalyzerCommand = command as string;
         } else {
-            vscode.window.showErrorMessage("Luau Analyzer command not found! Setting command to: `luau-analyze`");
+            vscode.window.showErrorMessage(`${ConfigurationName}: Luau Analyzer command not found! Setting command to: \`luau-analyze\``);
             AnalyzerCommand = "luau-analyze";
             config.update("analyzerCommand", AnalyzerCommand, true);
         }

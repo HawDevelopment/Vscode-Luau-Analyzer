@@ -32,7 +32,7 @@ export default class FileAnalyzer {
         
         let result = spawnSync(AnalyzerCommand, args, {input: stdin, cwd: this.cwd as any});
         if (!result.stdout) {
-            vscode.window.showErrorMessage(`Failed to run analyzer! Command not found: ${AnalyzerCommand}! Consider changing it in the settings.`);
+            vscode.window.showErrorMessage(`${ConfigurationName}: Failed to run analyzer! Command not found: ${AnalyzerCommand}! Consider changing it in the settings.`);
             return ""
         }
         return result.stdout.toString();

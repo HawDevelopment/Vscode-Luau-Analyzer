@@ -47,6 +47,11 @@
                 "command": "vscode-luau-analyzer.showAnnotations",
                 "title": "Show Annotations",
                 "category": "Analyzer-Lua"
+            },
+            {
+                "command": "vscode-luau-analyzer.installTypes",
+                "title": "Install Types",
+                "category": "Analyzer-Lua"
             }
         ]
     },
