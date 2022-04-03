@@ -118,6 +118,11 @@ class Extension {
                 this.collection.delete(document.uri);
                 this.deleteFileAnalyzer(document);
             }),
+            vscode.workspace.onDidChangeActiveTextEditor((editor) => {
+                if (editor) {
+                    this.updateDiagnostics(editor.document);
+                }
+            }),
         );
     }
     
