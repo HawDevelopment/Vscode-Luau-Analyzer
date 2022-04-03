@@ -18,27 +18,25 @@
                 "vscode-luau-analyzer.usesLuauAnalyzeRojo": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Should the extension make use of luau-analyzer-rojo? See: https://github.com/JohnnyMorganz/luau-analyze-rojo"
+                    "markdownDescription": "Should the extension make use of luau-analyzer-rojo? See: [luau-analyze-rojo](https://github.com/JohnnyMorganz/luau-analyze-rojo)"
                 },
                 "vscode-luau-analyzer.analyzerCommand": {
                     "type": "string",
                     "default": "luau-analyze",
                     "description": "Specifies analyzer command. Analyzer must be in PATH."
+                },
+                "vscode-luau-analyzer.rojoProject": {
+                    "type": "string",
+                    "default": "defualt.project.json",
+                    "markdownDescription": "Specifies the rojo project. (Note: `Uses Luau Analyze Rojo` must be set to true!)"
+                },
+                "vscode-luau-analyzer.typeDefinition": {
+                    "type": "string",
+                    "default": "globalTypes.d.lua",
+                    "markdownDescription": "Specifies the global type definition. (Note: `Uses Luau Analyze Rojo` must be set to true!)"
                 }
             }
-        },
-        "commands": [
-            {
-                "command": "vscode-luau-analyzer.setRojoProject",
-                "title": "Set Rojo Project Path",
-                "category": "Vscode-Analyzer-Luau"
-            },
-            {
-                "command": "vscode-luau-analyzer.setTypeDefsPath",
-                "title": "Set Type Definitions Path",
-                "category": "Vscode-Analyzer-Luau"
-            }
-        ]
+        }
     },
 	"scripts": {
 		"vscode:prepublish": "npm run compile",

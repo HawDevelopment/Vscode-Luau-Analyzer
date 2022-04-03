@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import FileAnalyzer from "./FileAnalyzer";
-import { getRojoProjectPath, getTypeDefsPath, pickFilePath } from "./Utils";
 
 function getWorkspacePath(): string | null {
     let folders = vscode.workspace.workspaceFolders;
@@ -10,11 +9,13 @@ function getWorkspacePath(): string | null {
     return folders[0].uri.fsPath;
 }
 
+export const ConfigurationName = "vscode-luau-analyzer";
+
 export let ExtensionContext: vscode.ExtensionContext;
 export let RojoProjectPath: string | undefined;
 export let TypeDefsPath: string | undefined;
 export let AnalyzerCommand: string;
-export let ConfigurationName = "vscode-luau-analyzer";
+export let UsesLuauAnalyzeRojo: boolean;
 
 class Extension {
     collection: vscode.DiagnosticCollection;
@@ -51,41 +52,14 @@ class Extension {
     }
     
     registerCommands() {
-        ExtensionContext.subscriptions.push(
-            vscode.commands.registerCommand(ConfigurationName + ".setRojoProject", async () => {
-                let path = await pickFilePath("rojo project", ".project.json");
-                if (!path) { return; }
-                ExtensionContext.workspaceState.update("rojoLastPath", path);
-                RojoProjectPath = path;
-                this.updateAllFiles();
-            }),
-            vscode.commands.registerCommand(ConfigurationName + ".setTypeDefsPath", async () => {
-                let path = await pickFilePath("type definitions", ".d.lua");
-                if (!path) { return; }
-                ExtensionContext.workspaceState.update("typeDefsLastPath", path);
-                TypeDefsPath = path;
-                this.updateAllFiles();
-            })
-        );
     }
     
     updateConfigs() {
         let config = vscode.workspace.getConfiguration(ConfigurationName);
         
-        if (config.get("usesLuauAnalyzeRojo") == true) {
-            getRojoProjectPath().then((path) => {
-                if (path !== RojoProjectPath) {
-                    RojoProjectPath = path;
-                    this.updateAllFiles();
-                }
-            });
-            getTypeDefsPath().then((path) => {
-                if (path !== TypeDefsPath) {
-                    TypeDefsPath = path;
-                    this.updateAllFiles();
-                }
-            });
-        }
+        RojoProjectPath = config.get("rojoProject", "defualt.project.json");
+        TypeDefsPath = config.get("typeDefinition", "globalTypes.d.lua");
+        UsesLuauAnalyzeRojo = config.get("usesLuauAnalyzeRojo") as boolean;
         
         let command = config.get("analyzerCommand");
         if (command) {
@@ -99,7 +73,9 @@ class Extension {
     
     activate() {
         this.updateConfigs()
-        ExtensionContext.subscriptions.push(vscode.workspace.onDidChangeConfiguration(this.updateConfigs));
+        ExtensionContext.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event) => {
+            this.updateConfigs();
+        }));
         
         if (vscode.window.activeTextEditor) {
             this.updateDiagnostics(vscode.window.activeTextEditor.document);
