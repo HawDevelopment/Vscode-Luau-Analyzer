@@ -40,7 +40,7 @@ export default class FileAnalyzer {
     
     createDiagnosticForLine(line: string): vscode.Diagnostic | undefined {
         let match = line.match(/^(.*):(\d*):(\d*-\d*): \(.*\) (\w*): (.*)/);
-        if (!match || match[1] !== "stdin") {
+        if (!match) {
             return;
         }
         
@@ -78,10 +78,34 @@ export default class FileAnalyzer {
         let newDiagnostics: vscode.Diagnostic[] = [];
         
         errors.forEach((line) => {
-            let diagnostic = this.createDiagnosticForLine(line);
-            if (diagnostic) {
-                newDiagnostics.push(diagnostic);
+            let match = line.match(/^(.*):(\d*):(\d*-\d*): \(.*\) (\w*): (.*)/)
+            if (!match) {
+                return;
             }
+            
+            let diagnostic = this.createDiagnosticForLine(line);
+            if (!diagnostic) { return; }
+            
+            if (match[1] == "stdin") {
+                newDiagnostics.push(diagnostic);
+            } else {
+                let uri = vscode.Uri.joinPath(vscode.Uri.file(this.cwd || ""), match[1]);
+                let collection = this.collection.get(uri) as vscode.Diagnostic[] | undefined;
+                if (!diagnostic || !collection) { return; }
+                
+                // Only add diagnostic if it's not already in the collection
+                if (
+                    !collection?.find((d) =>
+                        d.message == diagnostic!.message
+                        && d.range.start.line == diagnostic!.range.start.line
+                        && d.range.start.character == diagnostic!.range.start.character
+                        && d.range.end.line == diagnostic!.range.end.line
+                )) {
+                    let newCollection = collection.slice()
+                    newCollection.push(diagnostic);
+                    this.collection.set(uri, newCollection);
+                }
+            }            
         })
         
         this.collection.set(this.document.uri, newDiagnostics);
