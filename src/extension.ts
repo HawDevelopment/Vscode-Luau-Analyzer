@@ -12,7 +12,7 @@ function getWorkspacePath(): string | null {
 
 export const ConfigurationName = "vscode-luau-analyzer";
 
-export let ExtensionContext: vscode.ExtensionContext;
+export let Extension: ExtensionClass;
 export let RojoProjectPath: string | undefined;
 export let TypeDefsPath: string | undefined;
 export let AnalyzerCommand: string;
@@ -21,15 +21,17 @@ export let UsesLuauAnalyzeRojo: boolean;
 let SourceMap: string = "";
 let AnnotatedSource: string = "";
 
-class Extension {
+class ExtensionClass {
     collection: vscode.DiagnosticCollection;
     fileAnalyzers: Map<string, FileAnalyzer>;
+    context: vscode.ExtensionContext;
     
-    constructor() {
+    constructor(context: vscode.ExtensionContext) {
         this.fileAnalyzers = new Map<string, FileAnalyzer>();
+        this.context = context;
         
         this.collection = vscode.languages.createDiagnosticCollection("luau");
-        ExtensionContext.subscriptions.push(this.collection);
+        context.subscriptions.push(this.collection);
     }
     
     deleteFileAnalyzer(document: vscode.TextDocument) {
@@ -69,7 +71,7 @@ class Extension {
     }
     
     registerCommands() {
-        ExtensionContext.subscriptions.push(
+        this.context.subscriptions.push(
             vscode.commands.registerCommand(ConfigurationName + ".showSourceMap", () => {
                 let fileAnalyzer = this.rojoGetActiveFile();
                 if (!fileAnalyzer) { return; }
@@ -119,7 +121,7 @@ class Extension {
     
     activate() {
         this.updateConfigs()
-        ExtensionContext.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event) => {
+        this.context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event) => {
             this.updateConfigs();
         }));
         
@@ -129,7 +131,7 @@ class Extension {
         
         this.registerCommands();
         
-        ExtensionContext.subscriptions.push(
+        this.context.subscriptions.push(
             vscode.workspace.onDidOpenTextDocument((document) => {
                 this.updateDiagnostics(document);
             }),
@@ -154,16 +156,12 @@ class Extension {
     }
 }
 
-let extension: Extension;
-
-export function activate(context: vscode.ExtensionContext) {
-    ExtensionContext = context;
-    
-    extension = new Extension()
-    extension.activate();
+export function activate(context: vscode.ExtensionContext) {    
+    Extension = new ExtensionClass(context);
+    Extension.activate();
     console.log("Luau Analyzer extension activated.");
 }
 
 export function deactivate() {
-    extension.deactivate()
+    Extension.deactivate()
 }
