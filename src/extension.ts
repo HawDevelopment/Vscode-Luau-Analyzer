@@ -57,6 +57,7 @@ class ExtensionClass {
     
     updateAllFiles() {
         this.fileAnalyzers.forEach((analyzer) => {
+            analyzer.rebuildArgs();
             analyzer.runDiagnostics();
         })
     }

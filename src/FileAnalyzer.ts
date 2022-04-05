@@ -5,22 +5,18 @@ import { spawnSync } from "child_process";
 export default class FileAnalyzer {
     document: vscode.TextDocument;
     collection: vscode.DiagnosticCollection;
+    args: string[];
     cwd: string | null;
     
     constructor(document: vscode.TextDocument, collection: vscode.DiagnosticCollection, cwd: string | null) {
         this.document = document;
         this.collection = collection;
         this.cwd = cwd;
+        this.args = this.rebuildArgs();
     }
     
-    executeAnalyzer(args?: string[]): string {
-        let stdin = this.document.getText();
-        
-        args = args || [];
-        args.push(
-            "--formatter=plain",
-            "-"
-        )
+    rebuildArgs() {
+        let args = [];
         
         if (ExtensionSettings.UsesLuauAnalyzeRojo == true) {
             args.push(
@@ -29,6 +25,19 @@ export default class FileAnalyzer {
                 "--defs=" + ExtensionSettings.TypeDefsPath
             );
         }
+        
+        args.push("--formatter=plain", "-")
+        return args;
+    }
+    
+    executeAnalyzer(args?: string[]): string {
+        if (args) {
+            args = this.args.concat(args);
+        } else {
+            args = this.args;
+        }
+        
+        let stdin = this.document.getText();
         
         let result = spawnSync(ExtensionSettings.AnalyzerCommand, args, {input: stdin, cwd: this.cwd as any});
         if (!result.stdout) {
