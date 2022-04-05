@@ -27,7 +27,7 @@
                 },
                 "vscode-luau-analyzer.rojoProject": {
                     "type": "string",
-                    "default": "defualt.project.json",
+                    "default": "default.project.json",
                     "markdownDescription": "Specifies the rojo project. (Note: `Uses Luau Analyze Rojo` must be set to true!)"
                 },
                 "vscode-luau-analyzer.typeDefinition": {

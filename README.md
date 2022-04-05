@@ -43,11 +43,12 @@ Heres a small template:
 	]
 }
 ```
+
 ### Method 2
 
 Download install [JohnnyMorganz](https://github.com/JohnnyMorganz)'s [luau-analyze-rojo](https://github.com/JohnnyMorganz/luau-analyze-rojo).
 Go to the extensions settings and change `Use Luau Analyze Rojo` to true. (You might also need to change `Analyzer Command`)
 
-Download the latest global types from [here](https://github.com/JohnnyMorganz/luau-analyze-rojo/blob/master/globalTypes.d.lua). Name it `globalTypes.d.lua`, or change the defualt in the configuration.
+Download the latest global types from [here](https://github.com/JohnnyMorganz/luau-analyze-rojo/blob/master/globalTypes.d.lua). Name it `globalTypes.d.lua`, or change the default in the configuration.
 
-If your rojo project is not named `defualt.project.json`, then you can change it in the configurations.
+If your rojo project is not named `default.project.json`, then you can change it in the configurations.

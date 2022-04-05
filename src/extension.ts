@@ -105,7 +105,7 @@ class ExtensionClass {
     updateConfigs() {
         let config = vscode.workspace.getConfiguration(ConfigurationName);
         
-        RojoProjectPath = config.get("rojoProject", "defualt.project.json");
+        RojoProjectPath = config.get("rojoProject", "default.project.json");
         TypeDefsPath = config.get("typeDefinition", "globalTypes.d.lua");
         UsesLuauAnalyzeRojo = config.get("usesLuauAnalyzeRojo") as boolean;
         
