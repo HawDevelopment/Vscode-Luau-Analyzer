@@ -34,6 +34,16 @@
                     "type": "string",
                     "default": "globalTypes.d.lua",
                     "markdownDescription": "Specifies the global type definition. (Note: `Uses Luau Analyze Rojo` must be set to true!)"
+                },
+                "vscode-luau-analyzer.ignoredPaths": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default:": [
+                        "**/_Index/**"
+                    ],
+                    "markdownDescription": "Specifies the ignored paths that wont be used when sharing diagnostics. (Regex is supported!)"
                 }
             }
         },

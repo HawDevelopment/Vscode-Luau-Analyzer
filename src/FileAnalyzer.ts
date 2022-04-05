@@ -88,7 +88,8 @@ export default class FileAnalyzer {
             
             if (match[1] == "stdin") {
                 newDiagnostics.push(diagnostic);
-            } else {
+            } else if (ExtensionSettings.IgnoredPaths.find((path) => match![1].match(path)) == undefined) {
+                
                 let uri = vscode.Uri.joinPath(vscode.Uri.file(this.cwd || ""), match[1]);
                 let collection = this.collection.get(uri) as vscode.Diagnostic[] | undefined;
                 if (!diagnostic || !collection) { return; }

@@ -125,6 +125,8 @@ class ExtensionClass {
             ExtensionSettings.AnalyzerCommand = "luau-analyze";
             config.update("analyzerCommand", ExtensionSettings.AnalyzerCommand, true);
         }
+        
+        this.updateAllFiles();
     }
     
     activate() {
