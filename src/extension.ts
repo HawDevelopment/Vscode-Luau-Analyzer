@@ -11,12 +11,16 @@ function getWorkspacePath(): string | null {
 }
 
 export const ConfigurationName = "vscode-luau-analyzer";
-
 export let Extension: ExtensionClass;
-export let RojoProjectPath: string | undefined;
-export let TypeDefsPath: string | undefined;
-export let AnalyzerCommand: string;
-export let UsesLuauAnalyzeRojo: boolean;
+export let ExtensionContext: vscode.ExtensionContext;
+
+export let ExtensionSettings: {
+    RojoProjectPath: string,
+    TypeDefsPath: string,
+    UsesLuauAnalyzeRojo: boolean,
+    AnalyzerCommand: string,
+    IgnoredPaths: string[],
+};
 
 let SourceMap: string = "";
 let AnnotatedSource: string = "";
@@ -59,6 +63,7 @@ class ExtensionClass {
     
     rojoGetActiveFile(): FileAnalyzer | undefined {
         let config = vscode.workspace.getConfiguration(ConfigurationName);
+        
         if (config.get("usesLuauAnalyzeRojo") !== true) {
             vscode.window.showErrorMessage(`${ConfigurationName}: Cannot show file! Uses Luau Analyze Rojo is not enabled in configurations!`);
             return undefined;
@@ -105,17 +110,20 @@ class ExtensionClass {
     updateConfigs() {
         let config = vscode.workspace.getConfiguration(ConfigurationName);
         
-        RojoProjectPath = config.get("rojoProject", "default.project.json");
-        TypeDefsPath = config.get("typeDefinition", "globalTypes.d.lua");
-        UsesLuauAnalyzeRojo = config.get("usesLuauAnalyzeRojo") as boolean;
+        let newSettings = {
+            RojoProjectPath: config.get("rojoProject", "defualt.project.json"),
+            TypeDefsPath: config.get("typeDefinition", "globalTypes.d.lua"),
+            UsesLuauAnalyzeRojo: config.get("usesLuauAnalyzeRojo") as boolean,
+            AnalyzerCommand: config.get("analyzerCommand", "luau-analyze"),
+            IgnoredPaths: config.get("ignoredPaths", []) as string[],
+        }
         
-        let command = config.get("analyzerCommand");
-        if (command) {
-            AnalyzerCommand = command as string;
-        } else {
+        ExtensionSettings = newSettings;
+        
+        if (!ExtensionSettings.AnalyzerCommand) {
             vscode.window.showErrorMessage(`${ConfigurationName}: Luau Analyzer command not found! Setting command to: \`luau-analyze\``);
-            AnalyzerCommand = "luau-analyze";
-            config.update("analyzerCommand", AnalyzerCommand, true);
+            ExtensionSettings.AnalyzerCommand = "luau-analyze";
+            config.update("analyzerCommand", ExtensionSettings.AnalyzerCommand, true);
         }
     }
     

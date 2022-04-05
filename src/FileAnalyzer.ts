@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { ConfigurationName, AnalyzerCommand, RojoProjectPath, TypeDefsPath, UsesLuauAnalyzeRojo } from "./extension";
+import { ConfigurationName, ExtensionSettings } from "./extension";
 import { spawnSync } from "child_process";
 
 export default class FileAnalyzer {
@@ -22,17 +22,17 @@ export default class FileAnalyzer {
             "-"
         )
         
-        if (UsesLuauAnalyzeRojo == true) {
+        if (ExtensionSettings.UsesLuauAnalyzeRojo == true) {
             args.push(
                 "--stdin-filepath=" + vscode.workspace.asRelativePath(this.document.uri.fsPath),
-                "--project=" + RojoProjectPath,
-                "--defs=" + TypeDefsPath
+                "--project=" + ExtensionSettings.RojoProjectPath,
+                "--defs=" + ExtensionSettings.TypeDefsPath
             );
         }
         
-        let result = spawnSync(AnalyzerCommand, args, {input: stdin, cwd: this.cwd as any});
+        let result = spawnSync(ExtensionSettings.AnalyzerCommand, args, {input: stdin, cwd: this.cwd as any});
         if (!result.stdout) {
-            vscode.window.showErrorMessage(`${ConfigurationName}: Failed to run analyzer! Command not found: ${AnalyzerCommand}! Consider changing it in the settings.`);
+            vscode.window.showErrorMessage(`${ConfigurationName}: Failed to run analyzer! Command not found: ${ExtensionSettings.AnalyzerCommand}! Consider changing it in the settings.`);
             return ""
         }
         return result.stdout.toString();

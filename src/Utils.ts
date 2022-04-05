@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as https from 'https';
 import { TextEncoder } from "util";
-import { ConfigurationName, TypeDefsPath } from './extension';
+import { ConfigurationName, ExtensionSettings } from './extension';
 
 const TYPES_INSTALL_URL = "https://raw.githubusercontent.com/JohnnyMorganz/luau-analyze-rojo/master/globalTypes.d.lua"
 
@@ -23,7 +23,7 @@ export async function installTypes() {
                 vscode.workspace.fs.writeFile(
                     vscode.Uri.joinPath(
                         activeFolders![0].uri,
-                        TypeDefsPath!
+                        ExtensionSettings.TypeDefsPath
                     ),
                     new TextEncoder().encode(data)
                 );
