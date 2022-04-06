@@ -22,7 +22,8 @@ export default class FileAnalyzer {
             args.push(
                 "--stdin-filepath=" + vscode.workspace.asRelativePath(this.document.uri.fsPath),
                 "--project=" + ExtensionSettings.RojoProjectPath,
-                "--defs=" + ExtensionSettings.TypeDefsPath
+                "--defs=" + ExtensionSettings.TypeDefsPath,
+                "--exclude-virtual-path"
             );
         }
         
@@ -101,7 +102,7 @@ export default class FileAnalyzer {
                 
                 let uri = vscode.Uri.joinPath(vscode.Uri.file(this.cwd || ""), match[1]);
                 let collection = this.collection.get(uri) as vscode.Diagnostic[] | undefined;
-                if (!diagnostic || !collection) { return; }
+                if (!collection) { return; }
                 
                 // Only add diagnostic if it's not already in the collection
                 if (
