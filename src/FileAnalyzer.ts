@@ -32,15 +32,9 @@ export default class FileAnalyzer {
     }
     
     executeAnalyzer(args?: string[]): string {
-        if (args) {
-            args = this.args.concat(args);
-        } else {
-            args = this.args;
-        }
-        
-        let stdin = this.document.getText();
-        
-        let result = spawnSync(ExtensionSettings.AnalyzerCommand, args, {input: stdin, cwd: this.cwd as any});
+        args = args ? this.args.concat(args) : this.args;
+                
+        let result = spawnSync(ExtensionSettings.AnalyzerCommand, args, {input: this.document.getText(), cwd: this.cwd as any});
         if (!result.stdout) {
             vscode.window.showErrorMessage(`${ConfigurationName}: Failed to run analyzer! Command not found: ${ExtensionSettings.AnalyzerCommand}! Consider changing it in the settings.`);
             return ""
@@ -48,11 +42,8 @@ export default class FileAnalyzer {
         return result.stdout.toString();
     }
     
-    createDiagnosticForLine(line: string): vscode.Diagnostic | undefined {
-        let match = line.match(/^(.*):(\d*):(\d*-\d*): \(.*\) (\w*): (.*)/);
-        if (!match) {
-            return;
-        }
+    createDiagnosticForLine(match?: RegExpMatchArray): vscode.Diagnostic | undefined {
+        if (!match) { return; }
         
         let lineNumber = parseInt(match[2]) - 1;
         let range = new vscode.Range(
@@ -80,6 +71,14 @@ export default class FileAnalyzer {
         )
     }
     
+    matchLine(line: string) {
+        let match = line.match(/^(.*):(\d*):(\d*-\d*): \(.*\) (\w*): (.*)/);
+        if (!match) {
+            return;
+        }
+        return match
+    }
+    
     runDiagnostics() {
         // Clear old diagnostics
         this.collection.delete(this.document.uri);
@@ -88,18 +87,18 @@ export default class FileAnalyzer {
         let newDiagnostics: vscode.Diagnostic[] = [];
         
         errors.forEach((line) => {
-            let match = line.match(/^(.*):(\d*):(\d*-\d*): \(.*\) (\w*): (.*)/)
+            let match = this.matchLine(line)
             if (!match) {
                 return;
             }
             
-            let diagnostic = this.createDiagnosticForLine(line);
+            let diagnostic = this.createDiagnosticForLine(match);
             if (!diagnostic) { return; }
             
             if (match[1] == "stdin") {
                 newDiagnostics.push(diagnostic);
             } else if (ExtensionSettings.IgnoredPaths.find((path) => match![1].match(path)) == undefined) {
-                
+
                 let uri = vscode.Uri.joinPath(vscode.Uri.file(this.cwd || ""), match[1]);
                 let collection = this.collection.get(uri) as vscode.Diagnostic[] | undefined;
                 if (!collection) { return; }
