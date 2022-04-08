@@ -40,8 +40,8 @@ export default class FileAnalyzer {
 
             args.push("--formatter=plain", "-")
         }
-        
-        
+
+        this.args = args
         return args;
     }
     
