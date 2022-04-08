@@ -149,14 +149,12 @@ class ExtensionClass {
                 this.updateDiagnostics(document);
             }),
             vscode.workspace.onDidChangeTextDocument((event) => {
-                let config = vscode.workspace.getConfiguration(ConfigurationName);
-                if (config.get("readFilesystemOnly") === false) {
+                if (ExtensionSettings.ReadFilesystemOnly === false) {
                     this.updateDiagnostics(event.document);
                 }
             }),
             vscode.workspace.onDidSaveTextDocument((document) => {
-                let config = vscode.workspace.getConfiguration(ConfigurationName);
-                if (config.get("readFilesystemOnly") === true) {
+                if (ExtensionSettings.ReadFilesystemOnly === true) {
                     this.updateDiagnostics(document);
                 }
             }),
