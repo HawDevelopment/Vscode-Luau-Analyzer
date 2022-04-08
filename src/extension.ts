@@ -20,6 +20,7 @@ export let ExtensionSettings: {
     UsesLuauAnalyzeRojo: boolean,
     AnalyzerCommand: string,
     IgnoredPaths: string[],
+    ReadFilesystemOnly: boolean,
 };
 
 let SourceMap: string = "";
@@ -112,11 +113,12 @@ class ExtensionClass {
         let config = vscode.workspace.getConfiguration(ConfigurationName);
         
         let newSettings = {
-            RojoProjectPath: config.get("rojoProject", "defualt.project.json"),
+            RojoProjectPath: config.get("rojoProject", "default.project.json"),
             TypeDefsPath: config.get("typeDefinition", "globalTypes.d.lua"),
             UsesLuauAnalyzeRojo: config.get("usesLuauAnalyzeRojo") as boolean,
             AnalyzerCommand: config.get("analyzerCommand", "luau-analyze"),
             IgnoredPaths: config.get("ignoredPaths", []) as string[],
+            ReadFilesystemOnly: config.get("readFilesystemOnly", false),
         }
         
         ExtensionSettings = newSettings;
@@ -147,7 +149,14 @@ class ExtensionClass {
                 this.updateDiagnostics(document);
             }),
             vscode.workspace.onDidChangeTextDocument((event) => {
-                this.updateDiagnostics(event.document);
+                if (ExtensionSettings.ReadFilesystemOnly === false) {
+                    this.updateDiagnostics(event.document);
+                }
+            }),
+            vscode.workspace.onDidSaveTextDocument((document) => {
+                if (ExtensionSettings.ReadFilesystemOnly === true) {
+                    this.updateDiagnostics(document);
+                }
             }),
             vscode.workspace.onDidCloseTextDocument((document) => {
                 this.collection.delete(document.uri);

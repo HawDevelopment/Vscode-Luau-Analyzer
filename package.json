@@ -12,59 +12,64 @@
 		"onLanguage:lua"
 	],
 	"contributes": {
-        "configuration": {
-            "title": "Vscode-Analyzer-Luau",
-            "properties": {
-                "vscode-luau-analyzer.usesLuauAnalyzeRojo": {
-                    "type": "boolean",
-                    "default": false,
-                    "markdownDescription": "Should the extension make use of luau-analyzer-rojo? See: [luau-analyze-rojo](https://github.com/JohnnyMorganz/luau-analyze-rojo)"
-                },
-                "vscode-luau-analyzer.analyzerCommand": {
-                    "type": "string",
-                    "default": "luau-analyze",
-                    "description": "Specifies analyzer command. Analyzer must be in PATH."
-                },
-                "vscode-luau-analyzer.rojoProject": {
-                    "type": "string",
-                    "default": "default.project.json",
-                    "markdownDescription": "Specifies the rojo project. (Note: `Uses Luau Analyze Rojo` must be set to true!)"
-                },
-                "vscode-luau-analyzer.typeDefinition": {
-                    "type": "string",
-                    "default": "globalTypes.d.lua",
-                    "markdownDescription": "Specifies the global type definition. (Note: `Uses Luau Analyze Rojo` must be set to true!)"
-                },
-                "vscode-luau-analyzer.ignoredPaths": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "default:": [
-                        "**/_Index/**"
-                    ],
-                    "markdownDescription": "Specifies the ignored paths that wont be used when sharing diagnostics. (Regex is supported!)"
-                }
-            }
-        },
-        "commands": [
-            {
-                "command": "vscode-luau-analyzer.showSourceMap",
-                "title": "Show Dumped Source Map",
-                "category": "Analyzer-Lua"
-            },
-            {
-                "command": "vscode-luau-analyzer.showAnnotations",
-                "title": "Show Annotations",
-                "category": "Analyzer-Lua"
-            },
-            {
-                "command": "vscode-luau-analyzer.installTypes",
-                "title": "Install Types",
-                "category": "Analyzer-Lua"
-            }
-        ]
-    },
+		"configuration": {
+			"title": "Vscode-Analyzer-Luau",
+			"properties": {
+				"vscode-luau-analyzer.usesLuauAnalyzeRojo": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Should the extension make use of luau-analyzer-rojo? See: [luau-analyze-rojo](https://github.com/JohnnyMorganz/luau-analyze-rojo)"
+				},
+				"vscode-luau-analyzer.analyzerCommand": {
+					"type": "string",
+					"default": "luau-analyze",
+					"description": "Specifies analyzer command. Analyzer must be in PATH."
+				},
+				"vscode-luau-analyzer.rojoProject": {
+					"type": "string",
+					"default": "default.project.json",
+					"markdownDescription": "Specifies the rojo project. (Note: `Uses Luau Analyze Rojo` must be set to true!)"
+				},
+				"vscode-luau-analyzer.typeDefinition": {
+					"type": "string",
+					"default": "globalTypes.d.lua",
+					"markdownDescription": "Specifies the global type definition. (Note: `Uses Luau Analyze Rojo` must be set to true!)"
+				},
+				"vscode-luau-analyzer.readFilesystemOnly": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Specifies whether to act on the unsaved file contents, or only act on the saved file contents. When true, the analyzer will only run when saving instead of when typing."
+				},
+				"vscode-luau-analyzer.ignoredPaths": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default:": [
+						"**/_Index/**"
+					],
+					"markdownDescription": "Specifies the ignored paths that wont be used when sharing diagnostics. (Regex is supported!)"
+				}
+			}
+		},
+		"commands": [
+			{
+				"command": "vscode-luau-analyzer.showSourceMap",
+				"title": "Show Dumped Source Map",
+				"category": "Analyzer-Lua"
+			},
+			{
+				"command": "vscode-luau-analyzer.showAnnotations",
+				"title": "Show Annotations",
+				"category": "Analyzer-Lua"
+			},
+			{
+				"command": "vscode-luau-analyzer.installTypes",
+				"title": "Install Types",
+				"category": "Analyzer-Lua"
+			}
+		]
+	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
 		"compile": "tsc -p ./",
