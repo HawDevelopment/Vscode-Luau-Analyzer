@@ -116,7 +116,7 @@ export default class FileAnalyzer {
                 this.collection.addDiagnostic(diagnostic, match[0]);
             } else {
                 let uri = vscode.Uri.joinPath(vscode.Uri.file(this.cwd || ""), match[1]);
-                let collection = Extension.getOrCreateDiagnosticCollection(uri);
+                let collection = Extension.diagnosticGroup.getOrCreateDiagnosticCollection(uri);
                 
                 // If the uri is ignored, don't add the diagnostic
                 if (!collection) { continue; }
