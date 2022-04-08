@@ -1,14 +1,16 @@
 import * as vscode from "vscode";
-import { ConfigurationName, ExtensionSettings } from "./extension";
+import { ConfigurationName, Extension, ExtensionSettings } from "./extension";
 import { spawnSync } from "child_process";
+import { DiagnosticCollection } from "./DiagnosticCollection";
+
 
 export default class FileAnalyzer {
     document: vscode.TextDocument;
-    collection: vscode.DiagnosticCollection;
+    collection: DiagnosticCollection;
     args: string[];
     cwd: string | null;
     
-    constructor(document: vscode.TextDocument, collection: vscode.DiagnosticCollection, cwd: string | null) {
+    constructor(document: vscode.TextDocument, collection: DiagnosticCollection, cwd: string | null) {
         this.document = document;
         this.collection = collection;
         this.cwd = cwd;
@@ -89,12 +91,8 @@ export default class FileAnalyzer {
         )
     }
     
-    runDiagnostics() {
-        // Clear old diagnostics
-        this.collection.delete(this.document.uri);
-        
+    runDiagnostics() {    
         let errors = this.executeAnalyzer();
-        let newDiagnostics: vscode.Diagnostic[] = [];
 
         let lineRegex = /^(.*):(\d*):(\d*-\d*): \(.*\) (\w*): (.*(?:\r?\ncaused by:\r?\n(?:  .+)+)*)/mg;
         // This makes use of two features to grab each line plus, in some cases,
@@ -108,34 +106,26 @@ export default class FileAnalyzer {
 
         let match: RegExpExecArray | null;
         while ((match = lineRegex.exec(errors))) {
+            
             let diagnostic = this.createDiagnosticForLine(match);
             if (!diagnostic) { return; }
 
             let expectedFile = ExtensionSettings.ReadFilesystemOnly ? vscode.workspace.asRelativePath(this.document.uri.fsPath) : "stdin";
 
             if (match[1] == expectedFile) {
-                newDiagnostics.push(diagnostic);
-            } else if (ExtensionSettings.IgnoredPaths.find((path) => match![1].match(path)) == undefined) {
-
+                this.collection.addDiagnostic(diagnostic, match[0]);
+            } else {
                 let uri = vscode.Uri.joinPath(vscode.Uri.file(this.cwd || ""), match[1]);
-                let collection = this.collection.get(uri) as vscode.Diagnostic[] | undefined;
-                if (!collection) { return; }
+                let collection = Extension.getOrCreateDiagnosticCollection(uri);
+                
+                // If the uri is ignored, don't add the diagnostic
+                if (!collection) { continue; }
                 
                 // Only add diagnostic if it's not already in the collection
-                if (
-                    !collection?.find((d) =>
-                        d.message == diagnostic!.message
-                        && d.range.start.line == diagnostic!.range.start.line
-                        && d.range.start.character == diagnostic!.range.start.character
-                        && d.range.end.line == diagnostic!.range.end.line
-                )) {
-                    let newCollection = collection.slice()
-                    newCollection.push(diagnostic);
-                    this.collection.set(uri, newCollection);
+                if (collection.getDiagnostic(match[0]) == undefined) {
+                    collection.addDiagnostic(diagnostic, match[0]);
                 }
             }            
         }
-        
-        this.collection.set(this.document.uri, newDiagnostics);
     }
 }

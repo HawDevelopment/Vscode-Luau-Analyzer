@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { DiagnosticCollection } from "./DiagnosticCollection";
 import FileAnalyzer from "./FileAnalyzer";
 import { installTypes } from "./Utils";
 
@@ -28,15 +29,20 @@ let AnnotatedSource: string = "";
 
 class ExtensionClass {
     collection: vscode.DiagnosticCollection;
-    fileAnalyzers: Map<string, FileAnalyzer>;
+    fileAnalyzers: Map<string, FileAnalyzer> = new Map();
+    diagnosticCollections: Map<string, DiagnosticCollection> = new Map();
     context: vscode.ExtensionContext;
     
     constructor(context: vscode.ExtensionContext) {
-        this.fileAnalyzers = new Map<string, FileAnalyzer>();
         this.context = context;
-        
         this.collection = vscode.languages.createDiagnosticCollection("luau");
         context.subscriptions.push(this.collection);
+    }
+    
+    isIgnored(path: string) {
+        return ExtensionSettings.IgnoredPaths.some((ignoredPath) => {
+            return ignoredPath.match(path);
+        })
     }
     
     deleteFileAnalyzer(document: vscode.TextDocument) {
@@ -44,23 +50,69 @@ class ExtensionClass {
         this.fileAnalyzers.delete(path);
     }
     
-    updateDiagnostics(document: vscode.TextDocument): void {
+    createFileAnalyzer(document: vscode.TextDocument) {
+        let analyzer = new FileAnalyzer(
+            document,
+            this.getOrCreateDiagnosticCollection(document.uri),
+            getWorkspacePath()
+        );
+        this.fileAnalyzers.set(document.uri.fsPath, analyzer);
+        return analyzer;
+    }
+    
+    runOrCreateFileAnalyzer(document: vscode.TextDocument) {
         let path = document.uri.fsPath;
         if (document && (path.endsWith(".lua") || path.endsWith(".luau"))) {
             let analyzer = this.fileAnalyzers.get(path);
             if (!analyzer) {
-                analyzer = new FileAnalyzer(document, this.collection, getWorkspacePath());
-                this.fileAnalyzers.set(path, analyzer);
+                analyzer = this.createFileAnalyzer(document);
             }
-            analyzer.runDiagnostics();
+            this.runFileAnalyzer(analyzer);
         }
     }
     
-    updateAllFiles() {
+    runFileAnalyzer(analyzer: FileAnalyzer) {
+        analyzer.runDiagnostics()
+        this.applyAllDiagnosticCollections()
+    }
+    
+    updateAllFileAnalyzers() {
         this.fileAnalyzers.forEach((analyzer) => {
             analyzer.rebuildArgs();
+        })
+    }
+    
+    runAllFileAnalyzers() {
+        this.fileAnalyzers.forEach((analyzer) => {
             analyzer.runDiagnostics();
         })
+    }
+    
+    applyDiagnosticCollection(collection: DiagnosticCollection) {
+        if (!this.isIgnored(collection.uri.fsPath)) {
+            collection.apply()
+        }
+        
+        if (!(collection.changes) && !(this.fileAnalyzers.has(collection.uri.fsPath))) {
+            this.diagnosticCollections.delete(collection.uri.fsPath);
+        }
+        collection.dispose()
+    }
+    
+    applyAllDiagnosticCollections() {
+        this.diagnosticCollections.forEach((collection) => {
+            this.applyDiagnosticCollection(collection)
+        })
+    }
+    
+    getOrCreateDiagnosticCollection(uri: vscode.Uri) {
+        let path = uri.fsPath;
+        let collection = this.diagnosticCollections.get(path);
+        if (!collection) {
+            collection = new DiagnosticCollection(this.collection, uri);
+            this.diagnosticCollections.set(path, collection);
+        }
+        return collection;
     }
     
     rojoGetActiveFile(): FileAnalyzer | undefined {
@@ -129,7 +181,9 @@ class ExtensionClass {
             config.update("analyzerCommand", ExtensionSettings.AnalyzerCommand, true);
         }
         
-        this.updateAllFiles();
+        this.updateAllFileAnalyzers();
+        this.runAllFileAnalyzers();
+        this.applyAllDiagnosticCollections();
     }
     
     activate() {
@@ -139,32 +193,31 @@ class ExtensionClass {
         }));
         
         if (vscode.window.activeTextEditor) {
-            this.updateDiagnostics(vscode.window.activeTextEditor.document);
+            this.runOrCreateFileAnalyzer(vscode.window.activeTextEditor.document);
         }
         
         this.registerCommands();
         
         this.context.subscriptions.push(
             vscode.workspace.onDidOpenTextDocument((document) => {
-                this.updateDiagnostics(document);
+                this.runOrCreateFileAnalyzer(document);
             }),
             vscode.workspace.onDidChangeTextDocument((event) => {
                 if (ExtensionSettings.ReadFilesystemOnly === false) {
-                    this.updateDiagnostics(event.document);
+                    this.runOrCreateFileAnalyzer(event.document);
                 }
             }),
             vscode.workspace.onDidSaveTextDocument((document) => {
                 if (ExtensionSettings.ReadFilesystemOnly === true) {
-                    this.updateDiagnostics(document);
+                    this.runOrCreateFileAnalyzer(document);
                 }
             }),
             vscode.workspace.onDidCloseTextDocument((document) => {
-                this.collection.delete(document.uri);
                 this.deleteFileAnalyzer(document);
             }),
             vscode.window.onDidChangeActiveTextEditor((editor) => {
                 if (editor) {
-                    this.updateDiagnostics(editor.document);
+                    this.runOrCreateFileAnalyzer(editor.document);
                 }
             }),
         );
