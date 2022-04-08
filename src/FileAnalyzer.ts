@@ -17,28 +17,46 @@ export default class FileAnalyzer {
     
     rebuildArgs() {
         let args = [];
-        
-        if (ExtensionSettings.UsesLuauAnalyzeRojo == true) {
-            args.push(
-                "--stdin-filepath=" + vscode.workspace.asRelativePath(this.document.uri.fsPath),
-                "--project=" + ExtensionSettings.RojoProjectPath,
-                "--defs=" + ExtensionSettings.TypeDefsPath,
-                "--exclude-virtual-path"
-            );
+
+        if (ExtensionSettings.ReadFilesystemOnly) {
+            if (ExtensionSettings.UsesLuauAnalyzeRojo == true) {
+                args.push(
+                    "--project=" + ExtensionSettings.RojoProjectPath,
+                    "--defs=" + ExtensionSettings.TypeDefsPath,
+                    "--exclude-virtual-path"
+                );
+            }
+             
+            args.push("--formatter=plain", vscode.workspace.asRelativePath(this.document.uri.fsPath))   
+        } else {
+            if (ExtensionSettings.UsesLuauAnalyzeRojo == true) {
+                args.push(
+                    "--stdin-filepath=" + vscode.workspace.asRelativePath(this.document.uri.fsPath),
+                    "--project=" + ExtensionSettings.RojoProjectPath,
+                    "--defs=" + ExtensionSettings.TypeDefsPath,
+                    "--exclude-virtual-path"
+                );
+            }
+
+            args.push("--formatter=plain", "-")
         }
         
-        args.push("--formatter=plain", "-")
+        
         return args;
     }
     
     executeAnalyzer(args?: string[]): string {
         args = args ? this.args.concat(args) : this.args;
                 
-        let result = spawnSync(ExtensionSettings.AnalyzerCommand, args, {input: this.document.getText(), cwd: this.cwd as any});
+        let result = spawnSync(ExtensionSettings.AnalyzerCommand, args, {
+            input: ExtensionSettings.ReadFilesystemOnly ? undefined : this.document.getText(),
+            cwd: this.cwd as any,
+        });
         if (!result.stdout) {
             vscode.window.showErrorMessage(`${ConfigurationName}: Failed to run analyzer! Command not found: ${ExtensionSettings.AnalyzerCommand}! Consider changing it in the settings.`);
             return ""
         }
+
         return result.stdout.toString();
     }
     
@@ -94,8 +112,10 @@ export default class FileAnalyzer {
             
             let diagnostic = this.createDiagnosticForLine(match);
             if (!diagnostic) { return; }
-            
-            if (match[1] == "stdin") {
+
+            let expectedFile = ExtensionSettings.ReadFilesystemOnly ? vscode.workspace.asRelativePath(this.document.uri.fsPath) : "stdin";
+
+            if (match[1] == expectedFile) {
                 newDiagnostics.push(diagnostic);
             } else if (ExtensionSettings.IgnoredPaths.find((path) => match![1].match(path)) == undefined) {
 
