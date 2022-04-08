@@ -71,27 +71,25 @@ export default class FileAnalyzer {
         )
     }
     
-    matchLine(line: string) {
-        let match = line.match(/^(.*):(\d*):(\d*-\d*): \(.*\) (\w*): (.*)/);
-        if (!match) {
-            return;
-        }
-        return match
-    }
-    
     runDiagnostics() {
         // Clear old diagnostics
         this.collection.delete(this.document.uri);
         
-        let errors = this.executeAnalyzer().split("\n");
+        let errors = this.executeAnalyzer();
         let newDiagnostics: vscode.Diagnostic[] = [];
-        
-        errors.forEach((line) => {
-            let match = this.matchLine(line)
-            if (!match) {
-                return;
-            }
-            
+
+        let lineRegex = /^(.*):(\d*):(\d*-\d*): \(.*\) (\w*): (.*(?:\r?\ncaused by:\r?\n(?:  .+)+)?)/mg;
+        // This makes use of two features to grab each line plus, in some cases,
+        // following lines:
+        // * The `m` multiline flag: this is used to make `^` count as the start
+        //   of a new line.
+        // * The `g` global flag: this is used to make exec return a new match
+        //   every time it's called. RegExp objects hold internal state
+        //   referring to the last char index exec matched on, allowing us to call
+        //   exec repeatedly to get every match in the string.
+
+        let match: RegExpExecArray | null;
+        while ((match = lineRegex.exec(errors))) {
             let diagnostic = this.createDiagnosticForLine(match);
             if (!diagnostic) { return; }
             
@@ -116,7 +114,7 @@ export default class FileAnalyzer {
                     this.collection.set(uri, newCollection);
                 }
             }            
-        })
+        }
         
         this.collection.set(this.document.uri, newDiagnostics);
     }
