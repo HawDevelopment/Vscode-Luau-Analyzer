@@ -78,7 +78,7 @@ export default class FileAnalyzer {
         let errors = this.executeAnalyzer();
         let newDiagnostics: vscode.Diagnostic[] = [];
 
-        let lineRegex = /^(.*):(\d*):(\d*-\d*): \(.*\) (\w*): (.*(?:\r?\ncaused by:\r?\n(?:  .+)+)?)/mg;
+        let lineRegex = /^(.*):(\d*):(\d*-\d*): \(.*\) (\w*): (.*(?:\r?\ncaused by:\r?\n(?:  .+)+)*)/mg;
         // This makes use of two features to grab each line plus, in some cases,
         // following lines:
         // * The `m` multiline flag: this is used to make `^` count as the start
