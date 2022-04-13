@@ -18,7 +18,7 @@ export default class FileAnalyzer {
     }
     
     rebuildArgs() {
-        let args = [];
+        let args = [...ExtensionSettings.AdditionalArgs];
 
         if (ExtensionSettings.ReadFilesystemOnly) {
             if (ExtensionSettings.UsesLuauAnalyzeRojo == true) {

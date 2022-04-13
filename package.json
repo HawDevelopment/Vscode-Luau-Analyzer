@@ -49,6 +49,14 @@
 						"**/_Index/**"
 					],
 					"markdownDescription": "Specifies the ignored paths that wont be used when sharing diagnostics. (Regex is supported!)"
+				},
+				"vscode-luau-analyzer.additionalArgs": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default:": [],
+					"markdownDescription": "Specifies additional arguments to pass to luau-analyze"
 				}
 			}
 		},
