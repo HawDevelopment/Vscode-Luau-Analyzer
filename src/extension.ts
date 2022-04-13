@@ -18,6 +18,7 @@ export let ExtensionSettings: {
     AnalyzerCommand: string,
     IgnoredPaths: string[],
     ReadFilesystemOnly: boolean,
+    AdditionalArgs: string[],
 };
 
 let SourceMap: string = "";
@@ -99,6 +100,7 @@ class ExtensionClass {
             AnalyzerCommand: config.get("analyzerCommand", "luau-analyze"),
             IgnoredPaths: config.get("ignoredPaths", []) as string[],
             ReadFilesystemOnly: config.get("readFilesystemOnly", false),
+            AdditionalArgs: config.get("additionalArgs", []) as string[],
         }
         
         ExtensionSettings = newSettings;
