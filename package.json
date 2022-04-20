@@ -1,7 +1,7 @@
 {
 	"name": "vscode-luau-analyzer",
 	"displayName": "Vscode-Luau-Analyzer",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"description": "Vscode port of zeux's SublimeLinter-Luau",
 	"main": "./out/extension.js",
 	"engines": {
